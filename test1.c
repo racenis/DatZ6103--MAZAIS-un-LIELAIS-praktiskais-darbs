@@ -1,10 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include "optimizer.h"
+#include "test.h"
+
+// TEST 1
 
 int main(int argc, char** argv) {
+	TEST_BOILERPLATE
+	
 	int dist1[2] = {100, 12};
 	int dist2[2] = {15, 45};
 	int dist3[2] = {5, 98};
@@ -23,13 +27,5 @@ int main(int argc, char** argv) {
 		2
 	};
 	
-	Solution initial = GenerateInitialSolution(inputs);
-	//printf("\n");
-	//PrintSolution(initial, inputs);
-	
-	//printf("\n");
-	//Solution derived = IterateSolution(initial, inputs);
-	//PrintSolution(derived, inputs);
-	
-	Optimize(100000, initial, inputs);
+	TEST_BOILERPLATE_END
 }
