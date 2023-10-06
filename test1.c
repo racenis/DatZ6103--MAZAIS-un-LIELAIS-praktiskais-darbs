@@ -9,22 +9,28 @@
 int main(int argc, char** argv) {
 	TEST_BOILERPLATE
 	
-	int dist1[2] = {100, 12};
-	int dist2[2] = {15, 45};
-	int dist3[2] = {5, 98};
+	int dist1[1] = {100};
+	int dist2[1] = {15};
+	int dist3[1] = {5};
+	int dist4[1] = {12};
+	int dist5[1] = {98};
+	int dist6[1] = {45};
+	int dist7[1] = {102};
 	
-	Person persons[5] = {
+	Person persons[7] = {
 		{"Janka", 0, 2400, dist1},
-		{"Peteris", 0, 2400, dist3},
-		{"Chumbalis", 600, 1800, dist2},
-		{"Bingus", 1700, 2000, dist1},
-		{"Flopa", 600, 800, dist2}
+		{"Peteris", 0, 2400, dist2},
+		{"Chumbalis", 600, 1800, dist3},
+		{"Bingus", 1700, 2000, dist4},
+		{"Flopa", 600, 800, dist5},
+		{"R. Abar-Bebrs", 19, 2001, dist6},
+		{"MikroPrieksnieks", 666, 1111, dist7}
 	};
 	
 	Inputs inputs = {
 		persons,
 		5,
-		2
+		1
 	};
 	
 	TEST_BOILERPLATE_END

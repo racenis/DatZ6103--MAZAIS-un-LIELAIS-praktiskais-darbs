@@ -32,7 +32,7 @@ Solution GenerateInitialSolution(Inputs inputs) {
 	int p = 0;
 	int c = 0;
 	
-	for (int slot = 0; slot < 24 * 6; slot++) {
+	for (int slot = 0; slot < SLOTS_PER_CENTER; slot++) {
 		while (p < inputs.person_count) {
 			s.slots[c * SLOTS_PER_CENTER + slot] = &inputs.persons[p];
 			
@@ -67,7 +67,7 @@ Solution IterateSolution(Solution s, Inputs i) {
 	
 	n.slots[slot1] = s.slots[slot2];
 	n.slots[slot2] = s.slots[slot1];
-		
+	
 	return n;
 }
 
@@ -82,7 +82,7 @@ int FindNonAvailability(Solution solution, Inputs inputs) {
 			
 			if (person == NULL) continue;
 			
-			int slot_time = s * 10;
+			int slot_time = ((s / 6) * 100) + ((s % 6) * 10);
 			
 			if (slot_time < person->available_begin ||
 				slot_time > person->available_end) {
@@ -129,7 +129,7 @@ Solution Optimize(int steps, Solution initial, Inputs inputs) {
 			
 			prev_distance = next_distance;
 			prev_avalable = next_avalable;
-			
+
 #ifdef SPAM_CONSOLE
 			printf("\nDISTANCE: %i NONAVAILABLE: %i\n", next_distance, next_avalable);
 			PrintSolution(solution, inputs);
@@ -156,12 +156,12 @@ void PrintSolution(Solution solution, Inputs inputs) {
 			int minute = s % 6;
 			
 			char av = 'X';
-			int slot_time = s * 10;
+			int slot_time = ((s / 6) * 100) + ((s % 6) * 10);
 			if (slot_time < person->available_begin ||
 				slot_time > person->available_end) {
 					av = ' ';
 				}
-			
+
 			int dist = person->distances[c];
 			
 			printf("[%c] %04i %02i:%i0 person %s\n", av, dist, hour, minute, person->name);

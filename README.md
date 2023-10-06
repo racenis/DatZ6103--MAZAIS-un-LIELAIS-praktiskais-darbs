@@ -2,4 +2,5 @@
  
 ## LAIKA ŠĶIRBU OPTIMIZĒTĀJS
 
+Palaišana:
 ``` make ```
