@@ -26,12 +26,5 @@ int main(int argc, char** argv) {
 	};
 	
 	Solution initial = GenerateInitialSolution(inputs);
-	//printf("\n");
-	//PrintSolution(initial, inputs);
-	
-	//printf("\n");
-	//Solution derived = IterateSolution(initial, inputs);
-	//PrintSolution(derived, inputs);
-	
 	Optimize(10000000, initial, inputs);
 }

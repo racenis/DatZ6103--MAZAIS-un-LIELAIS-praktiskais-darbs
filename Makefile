@@ -1,5 +1,4 @@
-default: compile
-	a
+default: compile test1 test2 test3
 
 clean:
 	del a.exe

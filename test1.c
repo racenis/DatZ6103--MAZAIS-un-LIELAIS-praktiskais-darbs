@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
 	
 	Inputs inputs = {
 		persons,
-		5,
+		7,
 		1
 	};
 	

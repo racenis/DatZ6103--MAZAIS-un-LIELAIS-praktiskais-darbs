@@ -2,5 +2,16 @@
  
 ## LAIKA ŠĶIRBU OPTIMIZĒTĀJS
 
-Palaišana:
+Vajag GCC, vai arī citu C99 kompilatoru.
+
+### Testi
+
+Kompilācija:
 ``` make ```
+
+Palaišana:
+```
+test1
+test2
+test3
+```
