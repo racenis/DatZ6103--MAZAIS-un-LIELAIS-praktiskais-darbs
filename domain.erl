@@ -12,7 +12,11 @@
 
 -include("domain.hrl").
 
-% Domēna apraksts, izmaksu funkcijas.
+% +----------------------------------------------------------------------------+
+% |                                                                            |
+% |                            DOMĒNA KONFIGURĀCIJA                            |
+% |                                                                            |
+% +----------------------------------------------------------------------------+
 
 % Atdod sarakstu ar visiem korpusiem.
 get_all_buildings() ->	[admin, corp1, corp2, corp2a].
@@ -36,9 +40,14 @@ get_distance(corp2, corp2a) -> 5;
 get_distance(A, B) when A == B -> 1;
 get_distance(A, B) -> get_distance(B, A).
 
-% Atdod vai ceļš starp korpusiem ir mīnēts.
+% Atdod to vai ceļš starp korpusiem ir mīnēts.
 get_mined(corp2, corp2a) -> true;
 get_mined(_, _) -> false.
+
+% Atdod aktivitāšu ilgumus.
+activity_length(eat) -> 100;
+activity_length(feed) -> 10.
+
 
 
 
@@ -58,17 +67,17 @@ get_test_snuksti() ->
 	Snuksts2 = #snuksts{id=painis, name="Painis", unavailability=[{0, 500}, {500, 750}]},
 	[Snuksts1, Snuksts2].
 	
+% +----------------------------------------------------------------------------+
+% |                                                                            |
+% |                            IZMAKSU APRĒĶINĀTĀJI                            |
+% |                                                                            |
+% +----------------------------------------------------------------------------+
 	
 % Izmaksu funkcija.
 get_solution_cost(#solution{snuksti=Snuksti, schedules=Schedules}) ->
-	get_unavailability_cost(Snuksti, Schedules).
-
-% aprēķina nepieejamības izmaksu
-get_unavailability_cost(Snuksti, Schedules) ->
-	%erlang:display(Snuksti), erlang:display(Schedules), 
 	match_snuksts_to_schedule(Snuksti, Schedules, Schedules).
 
-% šņūkstu pieejamības palīgfunkcija, vispārējais gadījums
+% Šņūkstu pieejamības palīgfunkcija, vispārējais gadījums.
 match_snuksts_to_schedule([Snuksts | Snuksti], [Schedule | Schedules], AllSchedules) ->
 	SnukstsName = Snuksts#snuksts.id,
 	{ScheduleName, ScheduleActivities} = Schedule,
@@ -85,86 +94,115 @@ match_snuksts_to_schedule([Snuksts | Snuksti], [Schedule | Schedules], AllSchedu
 	
 	Total;
 	
-% gadījums ja šņūkstam nav darba grafiks
+% Gadījums ja šņūkstam nav darba grafiks.
 match_snuksts_to_schedule(_, [], _) -> 0;
-% gadījums ja visi šņūksti ir apskatīti
+% Gadījums ja visi šņūksti ir apskatīti.
 match_snuksts_to_schedule([], _, _) -> 0.
 
-activity_length(eat) -> 100;
-activity_length(feed) -> 10.
 
+% Šņūksta darba grafika izmaksu aprēķins.
 compute_schedule(Snuksts, Activities) ->
+	% katra šņūksta darba diena sāksies laika momentā nulle, savukārt fiziski
+	% šņūksta diena sāksies administrācijas ēkā
 	compute_schedule(Snuksts#snuksts.unavailability, Activities, 0, admin, 0).
 compute_schedule(_, [], Time, _, Mines) ->
+	% teiksim ka ja šņūksts ir strādājis ilgāk par 2000 laika vienībām, viņš ir pārstrādājies
 	case Time > 2000 of
 		true -> Overtime = Time - 2000;
 		false -> Overtime = 0
 	end,
 	
+	% savukārt ja šņūksts ir strādājis mazāk par 2000 laika vienībām, viņš ir zemstrādājies
 	case Time < 2000 of
 		true -> Undertime = 2000 - Time;
 		false -> Undertime = 0
 	end,
 	
+	% teiksim ka laika vienība pārstrādes ir divreiz sliktāka, kā laika vienība
+	% zemstrādes, savukārt iziešana reizi cauri mīnu laukam ir desmitreiz sliktāk, 
+	% nekā viena laika vienība zemstrādes
 	2 * Overtime + Undertime + 10 * Mines;
+
+% vispārīgais gadījums, iterējās cauri visām aktivitātēm un skaita cik daudz laika
+% tiek patērēts katrā aktivitātē un cik reizes mīnu laukam izies cauri šņūksts
 compute_schedule(Unavailability, [Activity | OtherActivites], Time, Location, Mines) ->
 	ActivityType = Activity#activity.type,
 	ActivityLocation = Activity#activity.building,
-
+	
+	% aprēķinam iztērēto laiku lai nokļūtu uz kārtējo aktivitāti no iepriekšējās,
+	% papildus aprēķināsim laika momentu kad kārtējā aktivitāte beigsies
 	TravelTime = get_distance(Location, ActivityLocation),
 	ActivityTime = activity_length(ActivityType),
 	EndTime = Time + TravelTime + ActivityTime,
 	
+	% paskatamies vai kaut kad šņūksts būs aizņemts
 	case Unavailability /= [] of
 		true ->	[{From, To} | Rest] = Unavailability;
 		false -> From = nil, To = nil, Rest = nil
 	end,
 	
+	% pārbaudām vai šņūkstam bija jāiziet cauri mīnu laukam, lai nokļūtu šajā aktivitātē
 	case get_mined(Location, ActivityLocation) of
 		true -> EndMines = Mines + 1;
 		false -> EndMines = Mines
 	end,
 	
 	if 
+		% ja šņūksts nespēj pabeigt aktivitāti un paspēt būt aizņemts, tad izlaižam
+		% šo aktivitāti un mēģinām to izpildīt pēc tam kad šņūksts atbrīvojās
 		(From /= nil) andalso (From < EndTime) ->
 			compute_schedule(Rest, [Activity | OtherActivites], To, Location, EndMines);
+		% citādi turpinām ar nākamo aktivitāti
 		true ->
 			compute_schedule(Unavailability, OtherActivites, EndTime, ActivityLocation, EndMines)
 	end.
 
+% +----------------------------------------------------------------------------+
+% |                                                                            |
+% |                           RISINĀJUMU ĢENERATORI                            |
+% |                                                                            |
+% +----------------------------------------------------------------------------+
+
+% No risinājuma uzģenerē jaunu risinājumu.
 get_modified_solution(#solution{snuksti=Snuksti, schedules=Schedules}) ->
-	FirstN = rand:uniform(length(Schedules)),
-	SecondN = rand:uniform(length(Schedules)),
-	
-	erlang:display([FirstN, SecondN]),
+	FirstN = rand:uniform(length(Schedules)),	% izlozē pirmo darba grafiku
+	SecondN = rand:uniform(length(Schedules)),	% izlozē otro darba grafiku
 	
 	case FirstN == SecondN of
 		true->
+			% ja izlozējās tas pats grafiks divreiz
 			{FirstSnuksts, FirstSched} = lists:nth(FirstN, Schedules),
 			
+			% izraujam ārā kaut kādu nejaušu aktivitāti no grafika
 			Moved = lists:nth(rand:uniform(length(FirstSched)), FirstSched),
 			RemovedSched = FirstSched -- [Moved],
 			
+			% nejauši pārdalām atlikušo grafiku divās daļās
 			case RemovedSched == [] of
 				true -> Split1 = [], Split2 = [];
 				false -> {Split1, Split2} = lists:split(rand:uniform(length(RemovedSched)), RemovedSched)
 			end,
 			
+			% ielīmējam aktivitāti starp pārdalītajām daļām
 			FinishedSched = (Split1 ++ [Moved]) ++ Split2,
 			ScheduleList = (Schedules -- [{FirstSnuksts, FirstSched}]) ++ [{FirstSnuksts,FinishedSched}],
 			
 			#solution{snuksti=Snuksti, schedules=ScheduleList};
 		false->
+			% ja izlozējām divus dažādus grafikus
 			{FirstSnuksts, FirstSched} = lists:nth(FirstN, Schedules),
 			{SecondSnuksts, SecondSched} = lists:nth(SecondN, Schedules),
 			
+			% izraujam kaut kādu aktivitāti no pirmā grafika
 			Moved = lists:nth(rand:uniform(length(FirstSched)), FirstSched),
 			
+			% nejauši pārdalām otro grafiku divās daļās
 			case SecondSched == [] of
 				true -> Split1 = [], Split2 = [];
 				false -> {Split1, Split2} = lists:split(rand:uniform(length(SecondSched)), SecondSched)
 			end,
 			
+			% salīmējam visu atpakaļ kopā
 			FinishedSched1 = FirstSched -- [Moved],
 			FinishedSched2 = (Split1 ++ [Moved]) ++ Split2,
 			ScheduleList = (((Schedules -- [{FirstSnuksts, FirstSched}]) -- [{SecondSnuksts, SecondSched}]) ++ [{FirstSnuksts, FinishedSched1}]) ++ [{SecondSnuksts, FinishedSched2}],
@@ -172,16 +210,19 @@ get_modified_solution(#solution{snuksti=Snuksti, schedules=Schedules}) ->
 			#solution{snuksti=Snuksti, schedules=ScheduleList}
 	end.
 
+% Uzģenerē sākotnējo risinājumu.
 get_initial_solution(Snuksti) ->
 	[{FirstName, FirstSched} | Rest] = get_initial_schedules(Snuksti),
 	ModSched = FirstSched ++ get_initial_frog_feeds(get_all_buildings()),
 	#solution{snuksti=Snuksti, schedules=[{FirstName, ModSched} | Rest]}.
 
+% Uzģenerē sākotnējās aktivitātes (iešņūkšana).
 get_initial_schedules([]) -> [];
 get_initial_schedules([#snuksts{id=Snuksts} | Rest]) ->
 	Schedule = [{Snuksts, [#activity{type=eat, building=admin, index=100}]}],
 	Schedule ++ get_initial_schedules(Rest).
 
+% Uzģenerē sākotnējās bruņuvaržu aktivitātes (piebarošana).
 get_initial_frog_feeds([]) -> [];
 get_initial_frog_feeds([Building | Rest]) ->
 	This = get_initial_frog_feeds(Building, 1),
