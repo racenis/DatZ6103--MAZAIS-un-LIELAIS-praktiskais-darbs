@@ -1,0 +1,134 @@
+<!doctype html>
+<html>
+	<head>
+		<title>
+			Sveicinati mana domena!
+		</title>
+		<script>
+			function jobs_click() {
+				const request = new XMLHttpRequest()
+				request.open("GET", "/jobs/", false)
+				request.send(null)
+
+				console.log(request.responseText)
+			}
+		
+			function getst(string) {
+				if (localStorage[string] == null) {
+					return ""
+				} else {
+					return localStorage[string]
+				}
+			}
+		
+			function savest(event) {
+				localStorage[event.target.id]=event.target.value
+			}
+		
+			function workers_click() {
+				if (localStorage.workers == null) {
+					localStorage.workers = 5
+				}
+			
+				let table = document.getElementById("workspace")
+				
+				table.innerHTML = "<tr><td><b>ID</b></td><td><b>Vārds</b></td><td><b>Netiek no</b></td><td><b>Netiek līdz</b></td></tr>"
+					
+				for (var i = 0; i < 10; i++) {
+					let hrow = document.createElement("tr")
+					
+					hrow.innerHTML = "<td><input id=\"worker"+i+"id\" value=\""+getst("worker"+i+"id")+"\"></td>" +
+					"<td><input id=\"worker"+i+"name\" value=\""+getst("worker"+i+"name")+"\"></td>"
+					+ "<td><input id=\"worker"+i+"from\" value=\""+getst("worker"+i+"from")+"\"></td>"
+					+ "<td><input id=\"worker"+i+"to\" value=\""+getst("worker"+i+"to")+"\"></td>"
+					
+					table.appendChild(hrow)
+				
+					//if (localStorage["worker"+i])
+				}
+				
+				for (var i = 0; i < 10; i++) {
+					document.getElementById("worker"+i+"id").addEventListener("change", savest);
+					document.getElementById("worker"+i+"name").addEventListener("change", savest);
+					document.getElementById("worker"+i+"from").addEventListener("change", savest);
+					document.getElementById("worker"+i+"to").addEventListener("change", savest);
+				}
+			}
+			
+			function optimize_click() {
+				snuksti = "["
+				for (var i = 0; i < 10; i++) {
+					if (getst("worker"+i+"id") == "") continue;
+					if (i >= 1) snuksti += ","
+					snuksti += "{snuksts,"+getst("worker"+i+"id")+",\""+getst("worker"+i+"name")+"\",[{"+getst("worker"+i+"from")+","+getst("worker"+i+"to")+"}]}"
+				}
+				snuksti += "]"
+				
+				req = "{job_params,"+document.getElementById("algoritm").value+","+document.getElementById("iters").value+","+snuksti+",\""+document.getElementById("desc").value+"\"}."
+				
+				alert(req)
+				
+				const request = new XMLHttpRequest()
+				request.open("POST", "/post/", false)
+				request.send(req)
+			}
+		
+		</script>
+	</head>
+	<body bgcolor="black">
+		<font color="white">
+			<table width="600" align="center">
+				<tr>
+					<td>
+						<h1>SIA Šņūkstings Bruņuvardes</h1>
+						
+						<marquee>
+							<font size="+1" color="red">
+								<b>
+									Nepiederošiem ieeja aizliegta!
+								</b>
+							</font>
+						</marquee>
+						
+						<p>
+							Sveicināti šņūkstu mājaslapā!
+						</p>
+						
+						<p>
+							Šeit ir iespējams veikt Šņūkstu darba laika 
+							optimizācijas.
+						</p>
+						
+						
+						<table border="1">
+							<tr>
+								<td>
+									<button onclick="jobs_click()">Darbi</button>
+								</td>
+								<td>
+									<button onclick="workers_click()">Šņūksti</button>
+								</td>
+								<td>
+									Algoritms:
+									<select id="algoritm">
+										<option value="default">Kalnā Kāpšana</option>
+									</select>
+									Iterācijas: <input id="iters" type="text" size="4"/>
+									Tags: <input id="desc" type="text" size="4"/>
+									<button onclick="optimize_click()">Optimizēt</button>
+								</td>
+							</tr>
+						</table>
+						
+						<table border="1" id="workspace">
+						
+						
+						</table>
+						
+						</table>
+					</td>
+				</tr>
+			</table>
+		</font>
+	</body>
+</html>

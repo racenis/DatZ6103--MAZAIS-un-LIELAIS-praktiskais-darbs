@@ -141,7 +141,7 @@ hill_climber(0, Solution, Score) ->
 	whereis(job_manager) ! {job_finished, self(), Solution, Score},
 	exit(finished);
 hill_climber(Iterations, Solution, Score) ->
-	io:format("Hill climber! Iterations: ~p Score: ~p~n", [Iterations, Score]),
+	%io:format("Hill climber! Iterations: ~p Score: ~p~n", [Iterations, Score]),
 	NewSolution = domain:get_modified_solution(Solution),
 	NewScore = domain:get_solution_cost(NewSolution),
 	case NewScore < Score of

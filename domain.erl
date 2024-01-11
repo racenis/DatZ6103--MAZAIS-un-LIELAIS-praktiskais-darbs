@@ -212,7 +212,7 @@ get_modified_solution(#solution{snuksti=Snuksti, schedules=Schedules}) ->
 			
 			% pārbaudām vai ir atļauts šo aktivitāti pārvietot starp šnūkstiem
 			case Moved#activity.type of
-				eat -> io:format("skipped!~n"), #solution{snuksti=Snuksti, schedules=Schedules};
+				eat -> #solution{snuksti=Snuksti, schedules=Schedules};
 				_ -> #solution{snuksti=Snuksti, schedules=ScheduleList}
 			end
 	end.
