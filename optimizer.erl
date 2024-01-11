@@ -7,7 +7,7 @@
 -export([get_job_result/1]).
 
 % šis tikai lai varētu palaist procesu
--export([job_manager/3]).
+-export([job_manager/4]).
 
 -include("optimizer.hrl").
 
@@ -18,7 +18,7 @@
 % +----------------------------------------------------------------------------+
 
 start_manager() ->
-	erlang:display("startging manaager"),
+	io:format("Starting manager...~n"),
 	
 	% pārbaudām vai darbu pārvaldnieks ir jau iestartēts, un ja ir, tad izslēdzam
 	ExistingManager = whereis(job_manager),
@@ -28,36 +28,31 @@ start_manager() ->
 	end,
 	
 	% iestartējam darbu pārvaldnieku
-	JobManager = spawn(optimizer, job_manager, [[], [], []]),
+	JobManager = spawn(optimizer, job_manager, [[], [], [], 1]),
 	
 	% piereģistrējam to
-	register(job_manager, JobManager),
-	%erlang:display(registered()),
-	%erlang:display(JobManager),
-	%erlang:display(registered()),
-	erlang:display("oke").
+	register(job_manager, JobManager).
 
-
-%get_test_snuksti()
-	
 start_job(Job) ->
 	whereis(job_manager) ! {start_job, Job}, ok.
 	
 stop_job(JobID) ->
 	whereis(job_manager) ! {stop_job, JobID}, ok.
 
-% TODO: pielikt saņemšanu
 get_job_status(Range) ->
-	whereis(job_manager) ! {get_job_status, self(), Range}.
+	whereis(job_manager) ! {get_job_status, self(), Range},
+	receive
+		{job_status, Result} -> Result
+	after 1000 -> [] end.
 
-% TODO: pielikt saņemšanu
 get_job_result(JobID) ->
-	whereis(job_manager) ! {get_job_result, self(), JobID}.
+	whereis(job_manager) ! {get_job_result, self(), JobID},
+	receive
+		{job_result, Result} -> Result
+	after 1000 -> [] end.
 	
 % Darbu pārvaldes process.
-job_manager(Running, Finished, Cancelled) ->
-	%erlang:display("This is forom job manager"),
-	%erlang:display(Running),
+job_manager(Running, Finished, Cancelled, LastID) ->
 
 	% neļausim nogalināt pārvaldnieku ja kāds no viņa darbiem nomirst
 	process_flag(trap_exit, true),
@@ -72,9 +67,9 @@ job_manager(Running, Finished, Cancelled) ->
 			
 			link(Process),
 			
-			Job = {123, Process, Iter, D},
+			Job = {LastID, Process, Iter, D},
 			
-			job_manager([Job|Running], Finished, Cancelled);
+			job_manager([Job|Running], Finished, Cancelled, LastID + 1);
 			
 		{stop_job, JobID} ->
 			io:format("Stopping job: ~p~n", [JobID]),
@@ -83,14 +78,20 @@ job_manager(Running, Finished, Cancelled) ->
 			
 			exit(Process, terminated);
 			
-			
-			
-			%job_manager(lists:keydelete(JobID, 1, Running), [NewJob|Finished]);
 		{get_job_status, Sender, {From, To}} ->
-			io:format("Getting job statuses: ~p--~p~n", [From, To])
+			io:format("Getting job statuses: ~p--~p~n", [From, To]),
 			
-			;
-		{get_job_result, Sender, JobID} -> io:format("Getting job result: ~p~n", [JobID]);
+			R = lists:map(fun({ID, _, Iter, D})->{running, ID, Iter, D, -1} end, Running),
+			F = lists:map(fun({ID, Iter, D, _, S})->{finished, ID, Iter, D, S} end, Finished),
+			C = lists:map(fun({ID, Iter, D, Re})->{Re, ID, Iter, D, -1} end, Cancelled),
+			
+			Sender ! {job_status, R ++ F ++ C};
+		{get_job_result, Sender, JobID} ->
+			io:format("Getting job result: ~p~n", [JobID]),
+			
+			{_, _, _, Solution, _} = lists:keyfind(JobID, 1, Finished),
+			
+			Sender ! {job_result, Solution};
 		
 		{job_finished, Sender, Solution, Score} ->
 			io:format("Finished job: ~p Score: ~p~n", [Sender, Score]),
@@ -99,12 +100,12 @@ job_manager(Running, Finished, Cancelled) ->
 		
 			Job = {JobID, Iter, D, Solution, Score},
 			
-			job_manager(Running, [Job|Finished], Cancelled);
+			job_manager(Running, [Job|Finished], Cancelled, LastID);
 			
 		{job_iterated, Sender, Iters} -> 
 			{JobID, _, _, D} = lists:keyfind(Sender, 2, Running),
 			Job = {JobID, Sender, Iters, D},
-			job_manager(lists:keyreplace(Sender, 2, Running, Job), Finished, Cancelled);
+			job_manager(lists:keyreplace(Sender, 2, Running, Job), Finished, Cancelled, LastID);
 		
 		{'EXIT', From, Reason} ->
 			io:format("Exited job: ~p ~p~n", [From, Reason]),
@@ -113,18 +114,21 @@ job_manager(Running, Finished, Cancelled) ->
 			
 			case Reason == finished of
 				true -> 
-					job_manager(lists:keydelete(JobID, 1, Running), Finished, Cancelled);
+					job_manager(lists:keydelete(JobID, 1, Running), Finished, Cancelled, LastID);
 				false ->
 					Job = {JobID, Iter, D, Reason},
-					job_manager(lists:keydelete(JobID, 1, Running), Finished, [Job|Cancelled])
+					job_manager(lists:keydelete(JobID, 1, Running), Finished, [Job|Cancelled], LastID)
 			end
 		
 	end,
 	
-	% spawn_link()
+	job_manager(Running, Finished, Cancelled, LastID).
 	
-	job_manager(Running, Finished, Cancelled).
-	
+% +----------------------------------------------------------------------------+
+% |                                                                            |
+% |                                OPTIMIZATORI                                |
+% |                                                                            |
+% +----------------------------------------------------------------------------+
 	
 get_optimizer(Type) ->
 	case Type of
@@ -136,8 +140,6 @@ hill_climber(Iterations, Initial) ->
 hill_climber(0, Solution, Score) ->
 	whereis(job_manager) ! {job_finished, self(), Solution, Score},
 	exit(finished);
-%hill_climber(Iterations, Solution, Score) ->
-%	hill_climber(Iterations - 1, Solution, Score).
 hill_climber(Iterations, Solution, Score) ->
 	io:format("Hill climber! Iterations: ~p Score: ~p~n", [Iterations, Score]),
 	NewSolution = domain:get_modified_solution(Solution),
