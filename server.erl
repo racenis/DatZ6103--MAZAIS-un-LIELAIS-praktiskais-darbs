@@ -40,7 +40,7 @@ handle(Socket) ->
 			%io:format("~p~n", [Splt]),
 			io:format("~p~n", [extract_header(Splt, nil, nil, nil, nil)]),
 			Response = make_http(extract_header(Splt, nil, nil, nil, nil)),
-			io:format("Sending response: ~p~n", [Response]),
+			%io:format("Sending response: ~p~n", [Response]),
 			gen_tcp:send(Socket, Response),
 			gen_tcp:close(Socket)
 	end,
@@ -82,6 +82,10 @@ make_http({Method, Path, Httpver, Req}) ->
 			{value,Value,_Bs} = erl_eval:exprs(AbsForm, erl_eval:new_bindings()),	
 			optimizer:start_job(Value),
 			io:format("Req:~p~n", [Value]);
+		"/result/" ->
+			Code = "200 OK",
+			Text = io_lib:format("~p",[optimizer:get_job_result(string:to_integer(Req))]),
+			Page = lists:flatten(Text);
 		_ -> Code = "200 OK", Page = "ES ESMU CHUNGUUUS"
 	end,
 	
