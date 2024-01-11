@@ -166,6 +166,8 @@ compute_schedule(Unavailability, [Activity | OtherActivites], Time, Location, Mi
 
 % No risinājuma uzģenerē jaunu risinājumu.
 get_modified_solution(#solution{snuksti=Snuksti, schedules=Schedules}) ->
+	%io:format("Schedules: ~p~n~n", [Schedules]),
+
 	FirstN = rand:uniform(length(Schedules)),	% izlozē pirmo darba grafiku
 	SecondN = rand:uniform(length(Schedules)),	% izlozē otro darba grafiku
 	
@@ -208,7 +210,11 @@ get_modified_solution(#solution{snuksti=Snuksti, schedules=Schedules}) ->
 			FinishedSched2 = (Split1 ++ [Moved]) ++ Split2,
 			ScheduleList = (((Schedules -- [{FirstSnuksts, FirstSched}]) -- [{SecondSnuksts, SecondSched}]) ++ [{FirstSnuksts, FinishedSched1}]) ++ [{SecondSnuksts, FinishedSched2}],
 			
-			#solution{snuksti=Snuksti, schedules=ScheduleList}
+			% pārbaudām vai ir atļauts šo aktivitāti pārvietot starp šnūkstiem
+			case Moved#activity.type of
+				eat -> io:format("skipped!~n"), #solution{snuksti=Snuksti, schedules=Schedules};
+				_ -> #solution{snuksti=Snuksti, schedules=ScheduleList}
+			end
 	end.
 
 % Uzģenerē sākotnējo risinājumu.
