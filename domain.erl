@@ -105,6 +105,7 @@ compute_schedule(Snuksts, Activities) ->
 	% katra šņūksta darba diena sāksies laika momentā nulle, savukārt fiziski
 	% šņūksta diena sāksies administrācijas ēkā
 	compute_schedule(Snuksts#snuksts.unavailability, Activities, 0, admin, 0).
+% apstājamais gadījums
 compute_schedule(_, [], Time, _, Mines) ->
 	% teiksim ka ja šņūksts ir strādājis ilgāk par 2000 laika vienībām, viņš ir pārstrādājies
 	case Time > 2000 of
