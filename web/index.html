@@ -61,7 +61,7 @@
 					
 					let hrow = document.createElement("tr")
 					
-					let button = "<button onclick=\"" + (t[0]=="running" ? "cancel_click" : "result_click") + "("+t[1]+")\">Skatīt</button>"
+					let button = "<button onclick=\"" + (t[0]=="running" ? "cancel_click" : "result_click") + "("+t[1]+")\">" + (t[0]=="running" ? "Atcelt" : "Skatīt") +"</button>"
 					if (t[0]=="terminated") button= ""
 					
 					hrow.innerHTML = "<td>"+status_get(t[0])+"</td>" + "<td>"+t[1]+"</td>" + "<td>"+t[3].replaceAll("\"", "")+"</td>" + "<td>"+t[2]+"</td>" + "<td>"+t[4]+"</td><td>"+button+"</td>"

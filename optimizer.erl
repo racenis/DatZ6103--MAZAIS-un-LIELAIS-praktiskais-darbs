@@ -136,16 +136,19 @@ get_optimizer(Type) ->
 	end.
 	
 hill_climber(Iterations, Initial) ->
-	hill_climber(Iterations, Initial, domain:get_solution_cost(Initial)).
-hill_climber(0, Solution, Score) ->
+	hill_climber(Iterations, Iterations, Initial, domain:get_solution_cost(Initial)).
+hill_climber(0, FinalIterations, Solution, Score) ->
+	whereis(job_manager) ! {job_iterated, self(), FinalIterations},
 	whereis(job_manager) ! {job_finished, self(), Solution, Score},
 	exit(finished);
-hill_climber(Iterations, Solution, Score) ->
-	%io:format("Hill climber! Iterations: ~p Score: ~p~n", [Iterations, Score]),
+hill_climber(Iterations, FinalIterations, Solution, Score) ->
 	NewSolution = domain:get_modified_solution(Solution),
 	NewScore = domain:get_solution_cost(NewSolution),
+	
+	whereis(job_manager) ! {job_iterated, self(), Iterations},
+	
 	case NewScore < Score of
-		true -> hill_climber(Iterations - 1, NewSolution, NewScore);
-		false -> hill_climber(Iterations - 1, Solution, Score)
+		true -> hill_climber(Iterations - 1, FinalIterations, NewSolution, NewScore);
+		false -> hill_climber(Iterations - 1, FinalIterations, Solution, Score)
 	end.
 		
