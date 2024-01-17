@@ -41,3 +41,6 @@
 % 		Aktivitātes indekss. Pašlaik derīgs tikai 'feed' aktivitāte, kurai šis
 % 		indekss nosaka bruņuvardes krātiņa numuru.
 -record(activity, {type, building, index}).
+
+% Risinājum labuma ieraksts
+-record(estimate, {total_worked_time, forbidden_time, overtime, undertime, lunch_penalty, mine_fields_crossed, unorderedness}).
