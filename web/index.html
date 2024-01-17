@@ -142,20 +142,50 @@
 				jobs_click()
 			}
 			
+			function table_row(x, y, z, y_lim=-1, r_lim=-1) {
+				let color = "none"
+				let cs = ""
+				let ce = ""
+				if (y_lim!=-1 && y>=y_lim) color = "yellow"
+				if (y_lim!=-1 && y>=r_lim) color = "red"
+			
+				if (color != "none") {
+					cs = "<i><font color=\""+color+"\">"
+					ce = "</font></i>"
+				}
+			
+				return "<tr><td>"+x+"</td><td>"+cs+y+ce+"</td><td>"+z+"</td></tr>"
+			}
+			
 			function result_click(index) {
-				
-				// sākuma tabulas HTML
-				let html = "<tr><td><b>Tips</b></td><td><b>Vieta</b></td><td><b>Nodalījums</b></td></tr>"
-				
+								
 				// taisam pieprasījumu
 				const request = new XMLHttpRequest()
 				request.open("POST", "/result/", false)
 				request.send(index)
 				
 				// nodalām šņūkstu ierakstus no aktivitāšu ierakstiem
-				let snuksti_t = request.responseText.split("///")[0]
-				let activity_t = request.responseText.split("///")[1]
+				let values_t = request.responseText.split("///")[0]
+				let snuksti_t = request.responseText.split("///")[1]
+				let activity_t = request.responseText.split("///")[2]
 
+				// sadalām novērtējumus
+				values_t = values_t.split(";")
+				
+				// sākuma tabulas HTML
+				let html = "<tr><td><b>Novērtējums</b></td><td><b>Vērtība</b></td><td><b>Apraksts</b></td></tr>"
+
+				html += table_row("Kopējais laiks", values_t[0], "Kopējais laiks, kuru šņūksti pavadīs darbā.")
+				html += table_row("Aizliegtais laiks", values_t[1], "Laiks, kurā šņūkstiem aizliegts strādā.", -1, 1)
+				html += table_row("Virslaiks", values_t[2], "Laiks, kuru šņūksti strādās virs noteiktā parastā dienas laika limita.", 1, 1000)
+				html += table_row("Zemlaiks", values_t[3], "Laiks, kurā šņūksti varētu strādāt, bet nestrādā.", 2000, 4000)
+				html += table_row("Iešņūciena kavējums", values_t[4], "Laiks, kuru šņūksti kavēs iešņūcienu.", 1000, 5000)
+				html += table_row("Mīnu lauku šķērsojumi", values_t[5], "Skaits, cik reizes šņūksti būs izgājuši cauri mīnu laukam.", 1, 5)
+				html += table_row("Nesakārtotība", values_t[6], "Skaits, cik aktivitātes ir nesakārtotas.")
+				html += table_row("Mīkstās izmaksas", values_t[7], "Kopējās mīksto ierobežojumu pārkāpumu izmaksas.")
+				html += table_row("Cietās izmaksas", values_t[7], "Kopējās cieto ierobežojumu pārkāpumu izmaksas.")
+				html += "<tr><td colspan=\"3\"><font size=\"+4\">&nbsp;</font></td></tr>"
+				
 				// sadalām šņūkstu ierakstus
 				let snuksti = {}
 				snuksti_t = snuksti_t.split(";")
@@ -170,6 +200,8 @@
 				// sadalām aktivitātes
 				activity_t = activity_t.split("/")
 				activity_t.pop()
+				
+				html += "<tr><td><b>Tips</b></td><td><b>Vieta</b></td><td><b>Nodalījums</b></td></tr>"
 				
 				for (rec in activity_t) {
 					tep = activity_t[rec].split(":")

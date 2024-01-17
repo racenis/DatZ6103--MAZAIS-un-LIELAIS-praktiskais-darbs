@@ -92,16 +92,31 @@ make_http({Method, Path, Httpver, Req}) ->
 			optimizer:start_job(Value),
 			io:format("Req:~p~n", [Value]);
 		"/result/" ->
-			Code = "200 OK",
 			{ResultIndex, _} = string:to_integer(Req),
-			#solution{snuksti=S, schedules=Sc} = optimizer:get_job_result(ResultIndex),
+			
+			Solution = optimizer:get_job_result(ResultIndex),
+			Estimate = domain:get_solution_cost_full(Solution),
+			
+			SC = io_lib:format("~p;~p;~p;~p;~p;~p;~p;~p;~p",[
+				Estimate#estimate.total_worked_time,
+				Estimate#estimate.forbidden_time,
+				Estimate#estimate.overtime,
+				Estimate#estimate.undertime,
+				Estimate#estimate.lunch_penalty,
+				Estimate#estimate.mine_fields_crossed,
+				Estimate#estimate.unorderedness,
+				domain:get_solution_soft_cost(Estimate),
+				domain:get_solution_hard_cost(Estimate)
+			]),
+			
+			
+			#solution{snuksti=S, schedules=Sc} = Solution,
 			
 			SF = lists:concat(lists:map(fun(Sn) -> io_lib:format("~s,~s;",[Sn#snuksts.id, Sn#snuksts.name]) end, S)),
 			
+			
 			_ = SF,
 			SL = lists:map(fun({Snuk, Activ}) ->
-				io:format("DOING A MAP!!!~n"),
-			
 				Act = lists:map(fun(#activity{type=T,building=B,index=I})->
 					io_lib:format("~s,~s,~p;",[T,B,I])
 				end, Activ),
@@ -109,7 +124,8 @@ make_http({Method, Path, Httpver, Req}) ->
 				io_lib:format("~s:~s/",[Snuk, lists:concat(Act)]) 
 			end, Sc),
 			
-			Page = SF ++ "///" ++ SL;
+			Code = "200 OK",
+			Page = SC ++ "///" ++ SF ++ "///" ++ SL;
 		"/cancel/" ->
 			Code = "200 OK",
 			{CancelIndex, _} = string:to_integer(Req),
