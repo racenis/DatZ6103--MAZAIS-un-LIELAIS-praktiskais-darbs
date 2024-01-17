@@ -9,6 +9,9 @@
 % šis tikai lai varētu palaist procesu
 -export([job_manager/4]).
 
+% šis tikai vienam algoritmam
+-export([genetic_parallel_iterate/2]).
+
 -include("optimizer.hrl").
 
 % +----------------------------------------------------------------------------+
@@ -137,7 +140,8 @@ get_optimizer(Type) ->
 		stochastic_parallel -> fun stochastic_parallel/2;
 		metropolis -> fun metropolis/2;
 		simulated_annealing -> fun simulated_annealing/2;
-		genetic -> fun genetic/2
+		genetic -> fun genetic/2;
+		genetic_parallel -> fun genetic_parallel/2
 	end.
 	
 	
@@ -293,3 +297,38 @@ genetic(Iterations, FinalIterations, Solutions) ->
 	whereis(job_manager) ! {job_iterated, self(), Iterations*8, BestScore},
 	
 	genetic(Iterations - 1, FinalIterations, NewSolutions).
+	
+% Ģenētiskais paralēlais
+genetic_parallel(Iterations, Initial) ->
+	genetic_parallel(Iterations div 8, Iterations, genetic_generate(32, [], Initial)).
+genetic_parallel(0, FinalIterations, Solutions) ->
+	genetic(0, FinalIterations, Solutions);
+genetic_parallel(Iterations, FinalIterations, Solutions) ->
+	Sorted = lists:keysort(1, Solutions),
+	Yeeted = lists:sublist(Sorted, 8),
+
+	Self = self(),
+	spawn(optimizer, genetic_parallel_iterate, [Self, element(2, lists:nth(1, Yeeted))]),
+	spawn(optimizer, genetic_parallel_iterate, [Self, element(2, lists:nth(2, Yeeted))]),
+	spawn(optimizer, genetic_parallel_iterate, [Self, element(2, lists:nth(3, Yeeted))]),
+	spawn(optimizer, genetic_parallel_iterate, [Self, element(2, lists:nth(4, Yeeted))]),
+	spawn(optimizer, genetic_parallel_iterate, [Self, element(2, lists:nth(5, Yeeted))]),
+	spawn(optimizer, genetic_parallel_iterate, [Self, element(2, lists:nth(6, Yeeted))]),
+	spawn(optimizer, genetic_parallel_iterate, [Self, element(2, lists:nth(7, Yeeted))]),
+	spawn(optimizer, genetic_parallel_iterate, [Self, element(2, lists:nth(8, Yeeted))]),
+	
+	{BestScore, _} = lists:nth(1, Yeeted),
+	whereis(job_manager) ! {job_iterated, self(), Iterations*8, BestScore},
+	
+	genetic_parallel_receive(Iterations, FinalIterations, Solutions, 8).
+	
+genetic_parallel_receive(Iterations, FinalIterations, Solutions, 0)->
+	genetic_parallel(Iterations-1, FinalIterations, Solutions);
+genetic_parallel_receive(Iterations, FinalIterations, Solutions, Need)->
+	NewSolutions = receive Any -> Any end,
+	genetic_parallel_receive(Iterations, FinalIterations, NewSolutions++Solutions, Need - 1).
+
+genetic_parallel_iterate(Parent, Initial) ->
+	NewSolutions = genetic_generate(4, [], Initial),
+	Parent ! NewSolutions,
+	ok.
