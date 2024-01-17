@@ -8,6 +8,7 @@
 			var current_page = "none"
 			var refresh_interval = 0
 			
+			// izsauc tad kad pamaina 'apakšlapu'
 			function set_page(p, i=false) {
 				current_page = p
 				
@@ -26,6 +27,7 @@
 				
 			}
 			
+			// palīgfunkcija
 			function status_get(st) {
 				if (st == "finished") return "<font color=\"green\">Pabeigts</font>"
 				if (st == "running") return "<font color=\"yellow\"><i>Optimizējās</i></font>"
@@ -33,6 +35,7 @@
 				return "<font color=\"red\"><b>"+st+"</b></font>"
 			}
 		
+			// tad kad nospiež uz pogas "Darbi"
 			function jobs_click() {
 				console.log("refresh")
 			
@@ -74,6 +77,7 @@
 				set_page("jobs", running)
 			}
 		
+			// atrod kaut ko lokālajā atmiņā
 			function getst(string) {
 				if (localStorage[string] == null) {
 					return ""
@@ -82,10 +86,12 @@
 				}
 			}
 		
+			// saglabā kaut ko lokālajā atmiņā
 			function savest(event) {
 				localStorage[event.target.id]=event.target.value
 			}
-		
+			
+			// tad kad nospiež uz "Šņūksti"
 			function workers_click() {
 				if (localStorage.workers == null) {
 					localStorage.workers = 5
@@ -118,7 +124,7 @@
 				set_page("workers")
 			}
 			
-			// Poga "Optimizēt"
+			// tad kad nospieš uz "Optimizēt"
 			function optimize_click() {
 				
 				// uzģenerējam šņūkstu sarakstu
@@ -142,6 +148,7 @@
 				jobs_click()
 			}
 			
+			// palīgfunkcija
 			function table_row(x, y, z, y_lim=-1, r_lim=-1) {
 				let color = "none"
 				let cs = ""
@@ -157,6 +164,7 @@
 				return "<tr><td>"+x+"</td><td>"+cs+y+ce+"</td><td>"+z+"</td></tr>"
 			}
 			
+			// tad kad uzspiež uz "Skatīt" pie kāda darba
 			function result_click(index) {
 								
 				// taisam pieprasījumu

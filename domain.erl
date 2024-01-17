@@ -149,14 +149,14 @@ compute_schedule(_, [], Time, _, Mines, Lunch, Order) ->
 	end,
 	
 	% savukārt ja šņūksts ir strādājis mazāk par 2000 laika vienībām, viņš ir zemstrādājies
-	case Time < 2000 of
+	case (Time < 2000) and (Time < 120) of
 		true -> Undertime = 2000 - Time;
 		false -> Undertime = 0
 	end,
 	
 	% un ja šņūksts ir strādājis ilgāk par 4000 stundām, viņš ir aizliegtstrādājies
 	case Time > 4000 of
-		true -> Forbiddentime = 4000 - Time;
+		true -> Forbiddentime = Time - 4000;
 		false -> Forbiddentime = 0
 	end,
 	
