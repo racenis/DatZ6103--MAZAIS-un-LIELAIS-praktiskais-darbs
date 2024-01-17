@@ -41,8 +41,6 @@ handle(Socket) ->
 			% sadalām HTTP pieprasījumu rindiņās
 			Split = re:split(Msg, "\r\n|\n|\r", [{return, list}]),
 			
-			erlang:display(Split),
-			
 			% izvelkam ārā informāciju no headera
 			Header = extract_header(Split, nil, nil, nil, nil),
 			

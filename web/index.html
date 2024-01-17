@@ -131,7 +131,7 @@
 				snuksti = "["
 				for (var i = 0; i < 10; i++) {
 					if (getst("worker"+i+"id") == "") continue;
-					if (i >= 1) snuksti += ","
+					if (snuksti != "[") snuksti += ","
 					snuksti += "{snuksts,"+getst("worker"+i+"id")+",\""+getst("worker"+i+"name")+"\",[{"+getst("worker"+i+"from")+","+getst("worker"+i+"to")+"}]}"
 				}
 				snuksti += "]"
@@ -154,7 +154,7 @@
 				let cs = ""
 				let ce = ""
 				if (y_lim!=-1 && y>=y_lim) color = "yellow"
-				if (y_lim!=-1 && y>=r_lim) color = "red"
+				if (r_lim!=-1 && y>=r_lim) color = "red"
 			
 				if (color != "none") {
 					cs = "<i><font color=\""+color+"\">"
@@ -191,7 +191,7 @@
 				html += table_row("Mīnu lauku šķērsojumi", values_t[5], "Skaits, cik reizes šņūksti būs izgājuši cauri mīnu laukam.", 1, 5)
 				html += table_row("Nesakārtotība", values_t[6], "Skaits, cik aktivitātes ir nesakārtotas.")
 				html += table_row("Mīkstās izmaksas", values_t[7], "Kopējās mīksto ierobežojumu pārkāpumu izmaksas.")
-				html += table_row("Cietās izmaksas", values_t[7], "Kopējās cieto ierobežojumu pārkāpumu izmaksas.")
+				html += table_row("Cietās izmaksas", values_t[8], "Kopējās cieto ierobežojumu pārkāpumu izmaksas.", -1, 1)
 				html += "<tr><td colspan=\"3\"><font size=\"+4\">&nbsp;</font></td></tr>"
 				
 				// sadalām šņūkstu ierakstus
@@ -297,7 +297,7 @@
 						</p>
 						
 						
-						<table border="1">
+						<table border="1" width="594">
 							<tr>
 								<td>
 									<button onclick="jobs_click()">Darbi</button>
@@ -306,12 +306,18 @@
 									<button onclick="workers_click()">Šņūksti</button>
 								</td>
 								<td>
-									Algoritms:
+									Alg.:
 									<select id="algoritm">
 										<option value="default">Kalnā Kāpšana</option>
+										<option value="stochastic">Stohastiskais</option>
+										<option value="stochastic_parallel">Stohastiskais (Paralēls)</option>
+										<option value="metropolis">Metropolisa</option>
+										<option value="simulated_annealing">Simulētā Apsaldēšana</option>
+										<option value="genetic">Ģenētiskais</option>
+										<option value="genetic_parallel">Ģenētiskais (Paralēls)</option>
 									</select>
-									Iterācijas: <input id="iters" type="text" size="4"/>
-									Tags: <input id="desc" type="text" size="4"/>
+									Iter.: <input id="iters" type="text" size="4"/>
+									Tags: <input id="desc" type="text" size="8"/>
 									<button onclick="optimize_click()">Optimizēt</button>
 								</td>
 							</tr>
