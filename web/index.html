@@ -99,6 +99,109 @@
 				request.open("POST", "/post/", false)
 				request.send(req)
 			}
+			
+			function result_click(index) {
+				
+				// sākuma tabulas HTML
+				let html = "<tr><td><b>Tips</b></td><td><b>Vieta</b></td><td><b>Nodalījums</b></td></tr>"
+				
+				// taisam pieprasījumu
+				const request = new XMLHttpRequest()
+				request.open("POST", "/result/", false)
+				request.send(index)
+				
+				// nodalām šņūkstu ierakstus no aktivitāšu ierakstiem
+				let snuksti_t = request.responseText.split("///")[0]
+				let activity_t = request.responseText.split("///")[1]
+
+				// sadalām šņūkstu ierakstus
+				let snuksti = {}
+				snuksti_t = snuksti_t.split(";")
+				snuksti_t.pop()
+				for (rec in snuksti_t) {
+					let id = snuksti_t[rec].split(",")[0]
+					let name = snuksti_t[rec].split(",")[1]
+				
+					snuksti[id] = name
+				}
+				
+				// sadalām aktivitātes
+				activity_t = activity_t.split("/")
+				activity_t.pop()
+				
+				for (rec in activity_t) {
+					tep = activity_t[rec].split(":")
+					
+					let snukst = tep[0]
+					let activs = tep[1].split(";")
+					activs.pop()
+					
+					html += "<tr><td colspan=\"3\"><center>" + snuksti[snukst] + "</center></td></tr>"
+					
+					for (rrr in activs) {
+						splitivs = activs[rrr].split(",")
+						
+						let type = splitivs[0]
+						let building = splitivs[1]
+						let crate = splitivs[2]
+						
+						html += "<tr><td>" + type + "</td><td>" + building + "</td><td>" + crate + "</td></tr>"
+						
+						//alert(type + " " + building + " " + crate)
+						
+						
+					}
+					
+					
+					
+				}
+				
+				//alert(snuksti)
+				//alert(activities)
+				
+				document.getElementById("workspace").innerHTML = html
+				
+				return;
+				// TODO: vienkārši izlabot erlang pusē teksta ģeneratoru
+				//let n = request.responseText.replaceAll(/(\r\n|\n|\r)/gm, "").replaceAll(/\s/g,'')
+				
+
+				//let snuksti = request.responseText.split(";")[0]
+				
+				snuksti = snuksti.replaceAll(/(\r\n|\n|\r)/gm, "").replaceAll(/\s/g,'')
+				
+				alert(snuksti)
+				
+				snuksti = snuksti.substring(0, snuksti.length - 1)
+				snuksti = snuksti.substring(1, snuksti.length)
+				
+				alert(snuksti)
+				
+				
+				let solution_1 = request.responseText.split(";")[1]
+				
+				//alert(solution_1)
+				
+				//alert(n)
+				
+				return;
+				let m = n.replaceAll("},{", "|")
+				let l = m.replaceAll("[{", "")
+				let r = l.replaceAll("}]", "")
+				
+				let s = r.split("|")
+
+				// tabulas saturs
+				for (const e of s) {
+					let t = e.split(",")
+					
+					let hrow = document.createElement("tr")
+					
+					hrow.innerHTML = "<td>"+status_get(t[0])+"</td>" + "<td>"+t[1]+"</td>" + "<td>"+t[3].replaceAll("\"", "")+"</td>" + "<td>"+t[2]+"</td>" + "<td>"+t[4]+"</td>" + "<td><button onclick=\"result_click("+t[1]+")\">Skatīt</button></td>"
+					
+					table.appendChild(hrow)
+				}
+			}
 		
 		</script>
 	</head>
