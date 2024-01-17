@@ -5,6 +5,27 @@
 			Šņūkstu Optimizators | SIA Šņūkstings Bruņuvardes
 		</title>
 		<script>
+			var current_page = "none"
+			var refresh_interval = 0
+			
+			function set_page(p, i=false) {
+				current_page = p
+				
+				console.log("setting " + p + " running " + i)
+				
+				if (i && !refresh_interval) {
+					refresh_interval = setInterval(jobs_click, 2500)
+					console.log("started")
+				}
+				
+				if (!i && refresh_interval) {
+					clearInterval(refresh_interval)
+					refresh_interval = 0
+					console.log("ended")
+				}
+				
+			}
+			
 			function status_get(st) {
 				if (st == "finished") return "<font color=\"green\">Pabeigts</font>"
 				if (st == "running") return "<font color=\"yellow\"><i>Optimizējās</i></font>"
@@ -13,6 +34,8 @@
 			}
 		
 			function jobs_click() {
+				console.log("refresh")
+			
 				let table = document.getElementById("workspace")
 				
 				// tabulas kolonnu nosaukumi
@@ -30,16 +53,25 @@
 				
 				let s = r.split("|")
 
+				let running = 0
+				
 				// tabulas saturs
 				for (const e of s) {
 					let t = e.split(",")
 					
 					let hrow = document.createElement("tr")
 					
-					hrow.innerHTML = "<td>"+status_get(t[0])+"</td>" + "<td>"+t[1]+"</td>" + "<td>"+t[3].replaceAll("\"", "")+"</td>" + "<td>"+t[2]+"</td>" + "<td>"+t[4]+"</td>" + "<td><button onclick=\"result_click("+t[1]+")\">Skatīt</button></td>"
+					let button = "<button onclick=\"" + (t[0]=="running" ? "cancel_click" : "result_click") + "("+t[1]+")\">Skatīt</button>"
+					if (t[0]=="terminated") button= ""
+					
+					hrow.innerHTML = "<td>"+status_get(t[0])+"</td>" + "<td>"+t[1]+"</td>" + "<td>"+t[3].replaceAll("\"", "")+"</td>" + "<td>"+t[2]+"</td>" + "<td>"+t[4]+"</td><td>"+button+"</td>"
+					
+					if(t[0]=="running") running++
 					
 					table.appendChild(hrow)
 				}
+				
+				set_page("jobs", running)
 			}
 		
 			function getst(string) {
@@ -82,9 +114,14 @@
 					document.getElementById("worker"+i+"from").addEventListener("change", savest);
 					document.getElementById("worker"+i+"to").addEventListener("change", savest);
 				}
+				
+				set_page("workers")
 			}
 			
+			// Poga "Optimizēt"
 			function optimize_click() {
+				
+				// uzģenerējam šņūkstu sarakstu
 				snuksti = "["
 				for (var i = 0; i < 10; i++) {
 					if (getst("worker"+i+"id") == "") continue;
@@ -93,11 +130,16 @@
 				}
 				snuksti += "]"
 				
+				// uzģenerējam pārējo pieprasījumu
 				req = "{job_params,"+document.getElementById("algoritm").value+","+document.getElementById("iters").value+","+snuksti+",\""+document.getElementById("desc").value+"\"}."
 
+				// aizsūtām pieprasījumu
 				const request = new XMLHttpRequest()
 				request.open("POST", "/post/", false)
 				request.send(req)
+				
+				// atjauninam sarakstu
+				jobs_click()
 			}
 			
 			function result_click(index) {
@@ -173,51 +215,19 @@
 					
 				}
 				
-				//alert(snuksti)
-				//alert(activities)
-				
 				document.getElementById("workspace").innerHTML = html
 				
-				return;
-				// TODO: vienkārši izlabot erlang pusē teksta ģeneratoru
-				//let n = request.responseText.replaceAll(/(\r\n|\n|\r)/gm, "").replaceAll(/\s/g,'')
+				set_page("result")
+			}
+			
+			function cancel_click(index) {
+				// aizsūtām pieprasījumu lai izbeidz darbu
+				const request = new XMLHttpRequest()
+				request.open("POST", "/cancel/", false)
+				request.send(index)
 				
-
-				//let snuksti = request.responseText.split(";")[0]
-				
-				snuksti = snuksti.replaceAll(/(\r\n|\n|\r)/gm, "").replaceAll(/\s/g,'')
-				
-				alert(snuksti)
-				
-				snuksti = snuksti.substring(0, snuksti.length - 1)
-				snuksti = snuksti.substring(1, snuksti.length)
-				
-				alert(snuksti)
-				
-				
-				let solution_1 = request.responseText.split(";")[1]
-				
-				//alert(solution_1)
-				
-				//alert(n)
-				
-				return;
-				let m = n.replaceAll("},{", "|")
-				let l = m.replaceAll("[{", "")
-				let r = l.replaceAll("}]", "")
-				
-				let s = r.split("|")
-
-				// tabulas saturs
-				for (const e of s) {
-					let t = e.split(",")
-					
-					let hrow = document.createElement("tr")
-					
-					hrow.innerHTML = "<td>"+status_get(t[0])+"</td>" + "<td>"+t[1]+"</td>" + "<td>"+t[3].replaceAll("\"", "")+"</td>" + "<td>"+t[2]+"</td>" + "<td>"+t[4]+"</td>" + "<td><button onclick=\"result_click("+t[1]+")\">Skatīt</button></td>"
-					
-					table.appendChild(hrow)
-				}
+				// atjauninam darbu sarakstu
+				jobs_click()
 			}
 		
 		</script>

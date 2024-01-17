@@ -110,7 +110,11 @@ make_http({Method, Path, Httpver, Req}) ->
 			end, Sc),
 			
 			Page = SF ++ "///" ++ SL;
-			%Page = io_lib:format("~p ; ~p",[SF, Sc]);
+		"/cancel/" ->
+			Code = "200 OK",
+			{CancelIndex, _} = string:to_integer(Req),
+			optimizer:stop_job(CancelIndex),
+			Page = "Thank you, please come visit again!";
 		_ ->
 			{ok, File} = file:read_file("web/not_found.html"),
 			Code = "404 OK",
