@@ -145,6 +145,23 @@
 						let building = splitivs[1]
 						let crate = splitivs[2]
 						
+						// nav smuki, bet derēs
+						switch(building){
+							case "admin": building = "Administrācija"; break;
+							case "corp1": building = "Korpuss 1"; break;
+							case "corp2": building = "Korpuss 2"; break;
+							case "corp2a": building = "Korpuss 2A"; break;
+						}
+						
+						if (type != "feed") {
+							crate = ""
+						}
+						
+						switch(type){
+							case "eat": type = "Iešņūkt"; break;
+							case "feed": type = "Pabarot"; break;
+						}
+						
 						html += "<tr><td>" + type + "</td><td>" + building + "</td><td>" + crate + "</td></tr>"
 						
 						//alert(type + " " + building + " " + crate)
