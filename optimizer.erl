@@ -134,7 +134,10 @@ get_optimizer(Type) ->
 	case Type of
 		default -> fun hill_climber/2;
 		stochastic -> fun stochastic/2;
-		stochastic_parallel -> fun stochastic_parallel/2
+		stochastic_parallel -> fun stochastic_parallel/2;
+		metropolis -> fun metropolis/2;
+		simulated_annealing -> fun simulated_annealing/2;
+		genetic -> fun genetic/2
 	end.
 	
 	
@@ -184,7 +187,7 @@ stochastic_parallel(Iterations, Initial) ->
 stochastic_parallel(0, FinalIterations, E, BestSolution, BestScore) ->
 	stochastic(0, FinalIterations, E, BestSolution, BestScore);
 stochastic_parallel(Iterations, FinalIterations, Solution, BestSolution, BestScore) ->
-	whereis(job_manager) ! {job_iterated, self(), Iterations, BestScore},
+	whereis(job_manager) ! {job_iterated, self(), Iterations*4, BestScore},
 	
 	Self = self(),
 	
@@ -207,3 +210,86 @@ stochastic_parallel_iterate(Solution, Parent) ->
 	NewScore = domain:get_solution_cost(NewSolution),
 	Parent ! {NewScore, NewSolution},
 	ok.
+
+% Metropolisa
+metropolis(Iterations, Initial) ->
+	InitialCost = domain:get_solution_cost(Initial),
+	metropolis(Iterations, Iterations, Initial, InitialCost, {Initial, InitialCost}).
+metropolis(0, FIter, _, _, {BestScore, BestSolution}) ->
+	whereis(job_manager) ! {job_iterated, self(), FIter, BestScore},
+	whereis(job_manager) ! {job_finished, self(), BestSolution, BestScore},
+	exit(finished);
+metropolis(Iterations, FIter, Solution, Score, {BestScore, BestSolution}) ->
+	whereis(job_manager) ! {job_iterated, self(), Iterations, BestScore},
+	
+	NewSolution = domain:get_modified_solution(Solution),
+	NewScore = domain:get_solution_cost(NewSolution),
+	
+	case NewScore < BestScore of
+		true -> NewBest={NewScore, NewSolution};
+		false -> NewBest={BestScore, BestSolution}
+	end,
+	
+	case (Score/NewScore) > rand:uniform() of
+		true -> metropolis(Iterations - 1, FIter, NewSolution, NewScore, NewBest);
+		false -> metropolis(Iterations - 1, FIter, Solution, Score, NewBest)
+	end.
+	
+% Simulētā apsaldēšana
+simulated_annealing(Iterations, Initial) ->
+	InitialCost = domain:get_solution_cost(Initial),
+	simulated_annealing({1.0, 1.0/Iterations}, Iterations, Iterations, Initial, InitialCost, {Initial, InitialCost}).
+simulated_annealing(_, 0, FIter, _, _, {BestScore, BestSolution}) ->
+	whereis(job_manager) ! {job_iterated, self(), FIter, BestScore},
+	whereis(job_manager) ! {job_finished, self(), BestSolution, BestScore},
+	exit(finished);
+simulated_annealing({Temp, Drop}, Iterations, FIter, Solution, Score, {BestScore, BestSolution}) ->
+	whereis(job_manager) ! {job_iterated, self(), Iterations, BestScore},
+	
+	NewSolution = domain:get_modified_solution(Solution),
+	NewScore = domain:get_solution_cost(NewSolution),
+	
+	case NewScore < BestScore of
+		true -> NewBest={NewScore, NewSolution};
+		false -> NewBest={BestScore, BestSolution}
+	end,
+	
+	case ((Score/NewScore)*Temp) > rand:uniform() of
+		true -> simulated_annealing({Temp - Drop, Drop}, Iterations - 1, FIter, NewSolution, NewScore, NewBest);
+		false -> simulated_annealing({Temp - Drop, Drop}, Iterations - 1, FIter, Solution, Score, NewBest)
+	end.
+	
+% Ģenētiskais algoritms
+genetic(Iterations, Initial) ->
+	genetic(Iterations div 8, Iterations, genetic_generate(32, [], Initial)).
+genetic_generate(0, Solutions, _) ->
+	Solutions;
+genetic_generate(Left, Solutions, Initial) ->
+	Solution = domain:get_modified_solution(Initial),
+	Score = domain:get_solution_cost(Solution),
+	genetic_generate(Left - 1, [{Score, Solution}|Solutions], Initial).
+	
+genetic(0, FinalIterations, Solutions) ->
+	Sorted = lists:keysort(1, Solutions),
+	{BestScore, BestSolution} = lists:nth(1, Sorted),
+	whereis(job_manager) ! {job_iterated, self(), FinalIterations, BestScore},
+	whereis(job_manager) ! {job_finished, self(), BestSolution, BestScore},
+	exit(finished);
+genetic(Iterations, FinalIterations, Solutions) ->
+	Sorted = lists:keysort(1, Solutions),
+	Yeeted = lists:sublist(Sorted, 8),
+
+	NewSolutions = 
+		genetic_generate(4, [], element(2, lists:nth(1, Yeeted))) ++
+		genetic_generate(4, [], element(2, lists:nth(2, Yeeted))) ++
+		genetic_generate(4, [], element(2, lists:nth(3, Yeeted))) ++
+		genetic_generate(4, [], element(2, lists:nth(4, Yeeted))) ++
+		genetic_generate(4, [], element(2, lists:nth(5, Yeeted))) ++
+		genetic_generate(4, [], element(2, lists:nth(6, Yeeted))) ++
+		genetic_generate(4, [], element(2, lists:nth(7, Yeeted))) ++
+		genetic_generate(4, [], element(2, lists:nth(8, Yeeted))),
+	
+	{BestScore, _} = lists:nth(1, Yeeted),
+	whereis(job_manager) ! {job_iterated, self(), Iterations*8, BestScore},
+	
+	genetic(Iterations - 1, FinalIterations, NewSolutions).
