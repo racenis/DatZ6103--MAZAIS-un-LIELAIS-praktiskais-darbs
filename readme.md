@@ -7,10 +7,12 @@ aiznavigēties uz to un tajā palaista komandrindu. Tad ar `erl` komandu var
 palaist erlang interpretatoru. Tad vajag nokompilēt programmu:
 ```c(domain).
 c(optimizer).
-c(server).```
+c(server).
+```
 Pēc tam vajag palaist optimizēšanas serveri un HTTP serveri:
 ```optimizer:start_manager().
-server:start().```
+server:start().
+```
 Ja serveri met ārā kaut kādus kļūdu paziņojumus, tad dažkārt var vēl pāris reizes
 mēģināt tos iestartēt un varbūt tad sanāks.
 Tad kad komandrindā parādās paziņojums `Waiting for a connection...`, tad var vērt
@@ -58,3 +60,45 @@ abos laukumos ir jāieraksta `0`.
 
 ![attēls2.png](docs/attels2.png)
 
+# Optimizatora konfigurēšana
+
+Darbajoslas lejāmestnes izvēlnē **Alg.** izvēlēties optimizatora algoritmu.
+Testēšanas laikā atklājās ka vislabākais ir algoritms ar nosaukumu "Kalnā Kāpšana".
+
+Lauciņā ar nosaukumu **Iter.** ierakstīt algoritma iterāciju skaitu. Skaitam
+jābūt veselam skaitlim no 1 līdz ļoti lielam skaitlim, bet vislabāk sanāk ap 10000. 
+
+Lauciņā **Tags** var ierakstīt alfanumerisko optimizācijas darba identifikācijas
+simbolu virkni, kas ļaus vielgāk identificēt palaistu optimizācijas darbu. Īpaši
+nedrīkst izmantot simbolu `"`.
+
+Kad visi parametri ir iestatīti, nospiest pogu "Optimizēt".
+
+![attēls3.png](docs/attels3.png)
+
+# Optimizēšanas gaidīšana
+
+![attēls4.png](docs/attels4.png)
+
+Nepieciešamības gadījumā ir iespējams nopsiest pogu "Atcelt" lai atceltu
+optimizācijas darbu. Nespiest pogu ja optimizācijas darbs ir tuvu beigšanai, jo
+tad iespējams ka serverim atcelšanas pieprasījums kad darbs būs jau beidzies un
+tad serveris apjukumā uztaisīs atteici.
+
+# Rezultātu apskatīšana
+
+![attēls5.png](docs/attels5.png)
+
+Nospiest uz pogas "Skatīt" pie pabeigtā optimizācijas darba.
+
+![attēls6.png](docs/attels6.png)
+
+Tabulas augšējā pusē ir attēlots risinājuma novērtējums. Zem novērtējuma ir 
+attēlots pilnais optimizācijas risinājuma saraksts ar katram šņūkstam
+piešķirtajiem darbiem.
+
+![attēls7.png](docs/attels7.png)
+
+# Docker attēls
+
+[https://hub.docker.com/r/racenis/sia-snukstings-brunuvardes](https://hub.docker.com/r/racenis/sia-snukstings-brunuvardes)
