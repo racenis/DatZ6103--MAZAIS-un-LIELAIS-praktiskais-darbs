@@ -26,9 +26,9 @@ get_all_buildings() ->	[admin, corp1, corp2, corp2a].
 
 % Atdod korpusa informāciju.
 get_building(admin) ->	#building{id=admin,name="Administrācija",frogslots=0};
-get_building(corp1) ->	#building{id=corp1,name="Korpuss 1",frogslots=10};
-get_building(corp2) ->	#building{id=corp2,name="Korpuss 2",frogslots=20};
-get_building(corp2a) ->	#building{id=corp2a,name="Korpuss 2A",frogslots=5}.
+get_building(corp1) ->	#building{id=corp1,name="Korpuss 1",frogslots=125};
+get_building(corp2) ->	#building{id=corp2,name="Korpuss 2",frogslots=200};
+get_building(corp2a) ->	#building{id=corp2a,name="Korpuss 2A",frogslots=25}.
 
 % Atdod attālumus starp korpusiem.
 get_distance(admin, corp1) -> 50;
@@ -76,11 +76,6 @@ get_test_snuksti() ->
 % |                                                                            |
 % +----------------------------------------------------------------------------+
 	
-	
-	% teiksim ka laika vienība pārstrādes ir divreiz sliktāka, kā laika vienība
-	% zemstrādes, savukārt iziešana reizi cauri mīnu laukam ir desmitreiz sliktāk, 
-	% nekā viena laika vienība zemstrādes
-	
 % Izmaksu funkcija.
 get_solution_cost(Solution) ->
 	Estimate = get_solution_cost_full(Solution),
@@ -96,7 +91,7 @@ get_solution_cost_full(#solution{snuksti=Snuksti, schedules=Schedules}) ->
 	
 % Mīkstās izmaksas
 get_solution_soft_cost(#estimate{overtime=OWT, undertime=UWT, lunch_penalty=LUN, mine_fields_crossed=MIN, unorderedness=UND})->
-	2*OWT + UWT + 3*LUN + 10*MIN + UND.
+	2*OWT + UWT + 1*LUN + 10*MIN + UND.
 
 % Cietās izmaksas
 get_solution_hard_cost(#estimate{forbidden_time=FBT})->

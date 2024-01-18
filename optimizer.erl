@@ -62,7 +62,7 @@ job_manager(Running, Finished, Cancelled, LastID) ->
 	
 	receive
 		{start_job, #job_params{optimizer=Opt, iters=Iter, snuksti=S, desc=D}} -> 
-			io:format("Starting job: ~p~n", [D]),
+			io:format("Starting job: ~p; ~p~n", [D, erlang:monotonic_time()]),
 			
 			InitialSolution = domain:get_initial_solution(S),
 			ProcessFunction = fun() -> apply(get_optimizer(Opt), [Iter, InitialSolution]) end,
@@ -111,7 +111,7 @@ job_manager(Running, Finished, Cancelled, LastID) ->
 			job_manager(lists:keyreplace(Sender, 2, Running, Job), Finished, Cancelled, LastID);
 		
 		{'EXIT', From, Reason} ->
-			io:format("Exited job: ~p ~p~n", [From, Reason]),
+			io:format("Exited job: ~p ~p; ~p~n", [From, Reason, erlang:monotonic_time()]),
 			
 			{JobID, _, Iter, _, D} = lists:keyfind(From, 2, Running),
 			
@@ -203,11 +203,11 @@ stochastic_parallel(Iterations, FinalIterations, Solution, BestSolution, BestSco
 	stochastic_parallel_receive(Iterations, FinalIterations, Solution, BestSolution, BestScore, 4).
 stochastic_parallel_receive(Iterations, FinalIterations, Solution, BestSolution, BestScore, 0)->
 	stochastic_parallel(Iterations-1, FinalIterations, Solution, BestSolution, BestScore);
-stochastic_parallel_receive(Iterations, FinalIterations, Solution, BestSolution, BestScore, Need)->
+stochastic_parallel_receive(Iterations, FinalIterations, _, BestSolution, BestScore, Need)->
 	{NewScore, NewSolution} = receive Any -> Any end,
 	case NewScore < BestScore of
 		true -> stochastic_parallel_receive(Iterations, FinalIterations, NewSolution, NewSolution, NewScore, Need-1);
-		false -> stochastic_parallel_receive(Iterations, FinalIterations, Solution, BestSolution, BestScore, Need-1)
+		false -> stochastic_parallel_receive(Iterations, FinalIterations, NewSolution, BestSolution, BestScore, Need-1)
 	end.
 stochastic_parallel_iterate(Solution, Parent) ->
 	NewSolution = domain:get_modified_solution(Solution),
@@ -218,7 +218,7 @@ stochastic_parallel_iterate(Solution, Parent) ->
 % Metropolisa
 metropolis(Iterations, Initial) ->
 	InitialCost = domain:get_solution_cost(Initial),
-	metropolis(Iterations, Iterations, Initial, InitialCost, {Initial, InitialCost}).
+	metropolis(Iterations, Iterations, Initial, InitialCost, {InitialCost, Initial}).
 metropolis(0, FIter, _, _, {BestScore, BestSolution}) ->
 	whereis(job_manager) ! {job_iterated, self(), FIter, BestScore},
 	whereis(job_manager) ! {job_finished, self(), BestSolution, BestScore},
@@ -242,7 +242,7 @@ metropolis(Iterations, FIter, Solution, Score, {BestScore, BestSolution}) ->
 % Simulētā apsaldēšana
 simulated_annealing(Iterations, Initial) ->
 	InitialCost = domain:get_solution_cost(Initial),
-	simulated_annealing({1.0, 1.0/Iterations}, Iterations, Iterations, Initial, InitialCost, {Initial, InitialCost}).
+	simulated_annealing({1.0, 1.0/Iterations}, Iterations, Iterations, Initial, InitialCost, {InitialCost, Initial}).
 simulated_annealing(_, 0, FIter, _, _, {BestScore, BestSolution}) ->
 	whereis(job_manager) ! {job_iterated, self(), FIter, BestScore},
 	whereis(job_manager) ! {job_finished, self(), BestSolution, BestScore},
