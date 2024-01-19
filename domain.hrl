@@ -43,4 +43,5 @@
 -record(activity, {type, building, index}).
 
 % Risinājum labuma ieraksts
+% 	viņi visi ir int tipi
 -record(estimate, {total_worked_time, forbidden_time, overtime, undertime, lunch_penalty, mine_fields_crossed, unorderedness}).

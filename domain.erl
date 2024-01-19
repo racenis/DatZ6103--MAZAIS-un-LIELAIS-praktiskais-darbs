@@ -8,8 +8,6 @@
 -export([get_solution_cost_full/1]).
 -export([get_solution_soft_cost/1]).
 -export([get_solution_hard_cost/1]).
--export([get_test_solution/0]).
--export([get_test_snuksti/0]).
 -export([get_modified_solution/1]).
 -export([get_initial_solution/1]).
 
@@ -51,25 +49,6 @@ get_mined(_, _) -> false.
 activity_length(eat) -> 100;
 activity_length(feed) -> 10.
 
-
-
-
-get_test_solution() ->
-	Snuksts1 = #snuksts{id=pootis, name="Pootis", unavailability=[{1000, 1200}, {1500, 1700}]},
-	Snuksts2 = #snuksts{id=painis, name="Painis", unavailability=[{0, 500}, {500, 750}]},
-	Snuksti = [Snuksts1, Snuksts2],
-	Activity1 = #activity{type=eat, building=admin, index=100},
-	
-	Schedule1 = {pootis, [Activity1]},
-	Schedule2 = {painis, [Activity1]},
-	Schedules = [Schedule1, Schedule2],
-	#solution{snuksti=Snuksti, schedules=Schedules}.
-
-get_test_snuksti() ->
-	Snuksts1 = #snuksts{id=pootis, name="Pootis", unavailability=[{1000, 1200}, {1500, 1700}]},
-	Snuksts2 = #snuksts{id=painis, name="Painis", unavailability=[{0, 500}, {500, 750}]},
-	[Snuksts1, Snuksts2].
-	
 % +----------------------------------------------------------------------------+
 % |                                                                            |
 % |                            IZMAKSU APRĒĶINĀTĀJI                            |
