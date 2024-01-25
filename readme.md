@@ -106,3 +106,15 @@ piešķirtajiem darbiem.
 # Docker attēls
 
 [https://hub.docker.com/r/racenis/sia-snukstings-brunuvardes](https://hub.docker.com/r/racenis/sia-snukstings-brunuvardes)
+
+# Zināmās kļūdas
+
+Zināmās kļūdas:
+
+Risinājumu pārveidotājs uztaisīs atteici ja kāds no grafikiem ir pilnībā tukšs.
+Zem izmantotā domēna šāds grafiks nav iespējams, bet vajadzētu atcerēties.
+
+Daudz visādas atteices. Praktiski nav nekādu ievada pārbaužu, kas pa lielam nav
+slikti, vajag tikai sataisīt supervizoru procesus visiem svarīgajiem, lai
+programma spētu atgūties pati un nevajadzētu raustīt severu pārstartēšanas
+funkcijas.
